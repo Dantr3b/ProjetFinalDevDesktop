@@ -34,7 +34,7 @@
         </VBox>
     </left>
     <top>
-        <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="topbar">
+        <HBox fx:id="topbar" alignment="CENTER_LEFT" spacing="20.0" styleClass="topbar">
             <TextField fx:id="searchField" promptText="Search your archive..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
             <Button fx:id="addGameButton" onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
             <Button fx:id="favoritesButton" onAction="#showFavorites" text="♡" styleClass="top-icon-button"/>
@@ -46,7 +46,7 @@
         </ScrollPane>
     </center>
     <bottom>
-        <HBox alignment="CENTER_RIGHT" spacing="12.0" styleClass="statusbar">
+        <HBox fx:id="statusbar" alignment="CENTER_RIGHT" spacing="12.0" styleClass="statusbar">
             <Label fx:id="statusLabel" text="Ready" styleClass="muted"/>
             <Region HBox.hgrow="ALWAYS"/>
             <Label fx:id="sortByLabel" text="Sort by:" styleClass="muted"/>

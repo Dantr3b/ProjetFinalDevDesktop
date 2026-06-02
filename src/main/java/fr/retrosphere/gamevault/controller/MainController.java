@@ -49,6 +49,8 @@ public class MainController {
     private static final List<String> PLATFORMS = List.of("All Platforms", "PC", "PS5", "Xbox", "Switch", "Retro");
 
     @FXML private BorderPane root;
+    @FXML private HBox topbar;
+    @FXML private HBox statusbar;
     @FXML private StackPane contentPane;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> sortCombo;
@@ -84,6 +86,7 @@ public class MainController {
 
     @FXML
     public void showCollection() {
+        setCollectionChrome(true);
         activate(collectionButton);
         if (favoritesButton != null) favoritesButton.setText("♡");
         List<Game> allGames = safeAllGames();
@@ -111,6 +114,7 @@ public class MainController {
 
     @FXML
     private void showFavorites() {
+        setCollectionChrome(false);
         activate(null);
         if (favoritesButton != null) favoritesButton.setText("♥");
         List<Game> games = safeFavorites();
@@ -134,11 +138,13 @@ public class MainController {
 
     @FXML
     private void showAddForm() {
+        setCollectionChrome(false);
         openForm(null);
     }
 
     @FXML
     private void showStatistics() {
+        setCollectionChrome(false);
         activate(statsButton);
         List<Game> games = safeAllGames();
         VBox page = pageShell();
@@ -162,6 +168,7 @@ public class MainController {
 
     @FXML
     private void showSettings() {
+        setCollectionChrome(false);
         activate(settingsButton);
         VBox page = pageShell();
         page.getChildren().add(titleBlock(t("Settings", "Parametres"),
@@ -244,6 +251,7 @@ public class MainController {
 
     @FXML
     private void showProfile() {
+        setCollectionChrome(false);
         activate(profileButton);
         List<Game> games = safeAllGames();
         VBox page = pageShell();
@@ -254,11 +262,7 @@ public class MainController {
         VBox identity = new VBox(4, styledLabel(profileName, "page-title"), styledLabel(profileBio, "muted"));
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        Button share = new Button("Share");
-        share.getStyleClass().add("ghost-button");
-        Button follow = new Button("Follow");
-        follow.getStyleClass().add("primary-button");
-        header.getChildren().addAll(avatar, identity, spacer, share, follow);
+        header.getChildren().addAll(avatar, identity, spacer);
         page.getChildren().add(header);
         page.getChildren().add(new HBox(20,
                 metric("Games Archived", String.valueOf(games.size()), "collection"),
@@ -344,6 +348,7 @@ public class MainController {
     }
 
     private void showDetails(Game game) {
+        setCollectionChrome(false);
         activate(collectionButton);
         VBox page = pageShell();
         page.setSpacing(36);
@@ -641,6 +646,13 @@ public class MainController {
 
     private void setContent(Node node) {
         contentPane.getChildren().setAll(node);
+    }
+
+    private void setCollectionChrome(boolean visible) {
+        topbar.setVisible(visible);
+        topbar.setManaged(visible);
+        statusbar.setVisible(visible);
+        statusbar.setManaged(visible);
     }
 
     private List<Game> safeAllGames() {
