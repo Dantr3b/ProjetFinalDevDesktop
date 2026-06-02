@@ -4,6 +4,7 @@ import fr.retrosphere.gamevault.MainApp;
 import fr.retrosphere.gamevault.config.AppConfig;
 import fr.retrosphere.gamevault.model.Game;
 import fr.retrosphere.gamevault.service.GameService;
+import fr.retrosphere.gamevault.service.GameValidationException;
 import javafx.collections.FXCollections;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -45,6 +46,7 @@ public class MainController {
     @FXML private Button statsButton;
     @FXML private Button settingsButton;
     @FXML private Button profileButton;
+    @FXML private Button favoritesButton;
 
     private final GameService service = new GameService();
     private String selectedPlatform = "All Platforms";
@@ -61,6 +63,7 @@ public class MainController {
     @FXML
     public void showCollection() {
         activate(collectionButton);
+        if (favoritesButton != null) favoritesButton.setText("♡");
         List<Game> games = service.search(searchField.getText(), selectedPlatform, sortCombo.getValue());
         VBox page = pageShell();
         page.getChildren().add(filterBar());
@@ -78,6 +81,29 @@ public class MainController {
         page.getChildren().add(footer);
         setContent(page);
         statusLabel.setText(games.size() + " jeu(x) affiché(s)");
+    }
+
+    @FXML
+    private void showFavorites() {
+        activate(null);
+        if (favoritesButton != null) favoritesButton.setText("♥");
+        List<Game> games = service.favorites();
+        VBox page = pageShell();
+        page.getChildren().add(titleBlock("Favoris", games.size() + " / 5 jeux dans vos favoris."));
+        if (games.isEmpty()) {
+            Label empty = styledLabel("Aucun favori. Cliquez sur ♡ sur une carte de jeu pour en ajouter.", "muted-center");
+            page.getChildren().add(empty);
+        } else {
+            GridPane grid = new GridPane();
+            grid.setHgap(22);
+            grid.setVgap(22);
+            for (int i = 0; i < games.size(); i++) {
+                grid.add(gameCard(games.get(i)), i % 4, i / 4);
+            }
+            page.getChildren().add(grid);
+        }
+        setContent(page);
+        statusLabel.setText("Favoris : " + games.size() + " / 5");
     }
 
     @FXML
@@ -200,7 +226,19 @@ public class MainController {
         rating.getStyleClass().add("rating-corner");
         StackPane.setAlignment(rating, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(rating, new Insets(10));
-        cover.getChildren().addAll(platform, rating);
+        Button favBtn = new Button(game.isFavorite() ? "♥" : "♡");
+        favBtn.getStyleClass().add(game.isFavorite() ? "fav-heart-active" : "fav-heart");
+        StackPane.setAlignment(favBtn, Pos.TOP_RIGHT);
+        StackPane.setMargin(favBtn, new Insets(6));
+        favBtn.setOnAction(event -> {
+            try {
+                service.toggleFavorite(game);
+            } catch (GameValidationException ex) {
+                showError(ex.getMessage());
+            }
+            showCollection();
+        });
+        cover.getChildren().addAll(platform, rating, favBtn);
 
         VBox meta = new VBox(6);
         meta.getStyleClass().add("game-meta");
@@ -231,7 +269,18 @@ public class MainController {
         Button delete = new Button("Delete from Vault");
         delete.setOnAction(event -> confirmDelete(game));
         delete.getStyleClass().add("danger-button");
-        controls.getChildren().addAll(edit, delete);
+        Button favDetail = new Button(game.isFavorite() ? "♥ Retirer des favoris" : "♡ Ajouter aux favoris");
+        favDetail.getStyleClass().add(game.isFavorite() ? "fav-heart-active" : "outline-button");
+        favDetail.setOnAction(event -> {
+            try {
+                service.toggleFavorite(game);
+            } catch (GameValidationException ex) {
+                showError(ex.getMessage());
+                return;
+            }
+            showDetails(game);
+        });
+        controls.getChildren().addAll(edit, delete, favDetail);
         info.getChildren().add(controls);
         hero.getChildren().addAll(cover, info);
         page.getChildren().add(hero);
