@@ -42,6 +42,9 @@ public class Game {
     private String coverPath;
     private LocalDateTime addedAt;
 
+    @Column(nullable = false, columnDefinition = "BOOLEAN DEFAULT FALSE")
+    private boolean favorite;
+
     public Game() {
     }
 
@@ -150,6 +153,14 @@ public class Game {
 
     public void setAddedAt(LocalDateTime addedAt) {
         this.addedAt = addedAt;
+    }
+
+    public boolean isFavorite() {
+        return favorite;
+    }
+
+    public void setFavorite(boolean favorite) {
+        this.favorite = favorite;
     }
 
     public String initials() {

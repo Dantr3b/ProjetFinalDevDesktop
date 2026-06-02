@@ -73,6 +73,18 @@ public class GameService {
         return value == null ? "" : value.toLowerCase(Locale.ROOT).trim();
     }
 
+    public List<Game> favorites() {
+        return allGames().stream().filter(Game::isFavorite).toList();
+    }
+
+    public void toggleFavorite(Game game) {
+        if (!game.isFavorite() && favorites().size() >= 5) {
+            throw new GameValidationException("Vous ne pouvez pas avoir plus de 5 jeux en favoris.");
+        }
+        game.setFavorite(!game.isFavorite());
+        repository.save(game);
+    }
+
     private Comparator<Game> sortComparator(String sort) {
         if ("Title".equals(sort) || "Titre".equals(sort)) {
             return Comparator.comparing(Game::getTitle, String.CASE_INSENSITIVE_ORDER);
