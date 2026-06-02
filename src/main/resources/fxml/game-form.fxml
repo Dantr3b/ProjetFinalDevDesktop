@@ -26,18 +26,22 @@
         <GridPane hgap="18.0" vgap="14.0">
             <Label text="GAME TITLE" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
             <TextField fx:id="titleField" promptText="e.g. Elden Ring: Shadow of the Erdtree" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
-            <Label text="DEVELOPER" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
-            <Label text="PUBLISHER" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
-            <TextField fx:id="developerField" promptText="FromSoftware" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
-            <TextField fx:id="publisherField" promptText="Bandai Namco" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
-            <Label text="RELEASE YEAR" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
-            <Label text="PLATFORM" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
-            <TextField fx:id="yearField" promptText="2024" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
-            <ComboBox fx:id="platformCombo" promptText="Select hardware..." GridPane.columnIndex="1" GridPane.rowIndex="5"/>
-            <Label text="GENRE" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
-            <Label text="STATUS" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
-            <TextField fx:id="genreField" promptText="Action RPG" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
-            <ComboBox fx:id="statusCombo" promptText="Owned" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+            <HBox alignment="CENTER_LEFT" spacing="12.0" GridPane.columnIndex="0" GridPane.rowIndex="2" GridPane.columnSpan="2">
+                <Button fx:id="autoFillButton" text="Auto-fill from Steam" onAction="#autoFillFromApi" styleClass="outline-button"/>
+                <Label text="Import metadata and cover art automatically." styleClass="muted"/>
+            </HBox>
+            <Label text="DEVELOPER" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+            <Label text="PUBLISHER" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            <TextField fx:id="developerField" promptText="FromSoftware" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+            <TextField fx:id="publisherField" promptText="Bandai Namco" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            <Label text="RELEASE YEAR" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+            <Label text="PLATFORM" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <TextField fx:id="yearField" promptText="2024" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+            <ComboBox fx:id="platformCombo" promptText="Select hardware..." GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+            <Label text="GENRE" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+            <Label text="STATUS" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+            <TextField fx:id="genreField" promptText="Action RPG" GridPane.columnIndex="0" GridPane.rowIndex="8"/>
+            <ComboBox fx:id="statusCombo" promptText="Owned" GridPane.columnIndex="1" GridPane.rowIndex="8"/>
         </GridPane>
         <VBox spacing="8.0">
             <Label text="ARCHIVAL RATING" styleClass="field-label"/>

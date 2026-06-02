@@ -8,6 +8,7 @@ GameVault est une application desktop JavaFX conçue pour l'association RetroSph
 - Recherche par titre, développeur, éditeur, plateforme, genre ou statut.
 - Filtre par plateforme et tri par ajout récent, titre, note ou année de sortie.
 - Ajout et modification d'un jeu avec validation des champs obligatoires.
+- Recuperation automatique des informations d'un jeu via l'API publique Steam.
 - Suppression avec confirmation utilisateur.
 - Persistance SQLite via Hibernate.
 - Données de démonstration automatiquement créées au premier lancement.

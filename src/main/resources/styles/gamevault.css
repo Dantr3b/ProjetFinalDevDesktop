@@ -59,6 +59,7 @@
     -fx-border-color: rgba(73, 68, 84, 0.35) transparent transparent transparent;
     -fx-border-width: 1 0 0 0;
     -fx-padding: 22 24;
+    -fx-graphic-text-gap: 12;
 }
 
 .topbar,
@@ -122,6 +123,19 @@
     -fx-font-weight: 700;
     -fx-padding: 12 22;
     -fx-cursor: hand;
+}
+
+.link-button {
+    -fx-background-color: transparent;
+    -fx-text-fill: #4cd7f6;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
+    -fx-padding: 6 0;
+    -fx-cursor: hand;
+}
+
+.link-button:hover {
+    -fx-text-fill: #9ceeff;
 }
 
 .danger-button {
@@ -315,6 +329,113 @@
     -fx-font-weight: 900;
 }
 
+.detail-title-figma {
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 48px;
+    -fx-font-weight: 900;
+    -fx-wrap-text: true;
+}
+
+.detail-hero-figma {
+    -fx-min-height: 620;
+    -fx-background-color: #0b1326;
+}
+
+.detail-visual-pane {
+    -fx-min-height: 620;
+    -fx-background-color: linear-gradient(to bottom, rgba(23, 31, 51, 0.96), rgba(11, 19, 38, 1));
+    -fx-background-radius: 0;
+    -fx-padding: 36;
+}
+
+.detail-main-cover {
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+    -fx-effect: dropshadow(gaussian, rgba(0, 0, 0, 0.42), 28, 0.25, 0, 14);
+}
+
+.detail-info-pane {
+    -fx-min-height: 620;
+    -fx-padding: 108 64 80 64;
+    -fx-background-color: #0b1326;
+}
+
+.detail-tag {
+    -fx-background-radius: 999;
+    -fx-border-radius: 999;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+    -fx-padding: 6 13;
+}
+
+.cyan-tag {
+    -fx-background-color: rgba(76, 215, 246, 0.10);
+    -fx-border-color: rgba(76, 215, 246, 0.25);
+    -fx-text-fill: #4cd7f6;
+}
+
+.gold-tag {
+    -fx-background-color: rgba(255, 184, 105, 0.10);
+    -fx-border-color: rgba(255, 184, 105, 0.25);
+    -fx-text-fill: #ffb869;
+}
+
+.floating-detail-badge,
+.detail-bento-main,
+.detail-side-card {
+    -fx-background-color: rgba(45, 52, 73, 0.70);
+    -fx-border-color: rgba(149, 142, 160, 0.24);
+    -fx-border-width: 1;
+    -fx-background-radius: 12;
+    -fx-border-radius: 12;
+}
+
+.floating-detail-badge {
+    -fx-padding: 13 25;
+}
+
+.floating-badge-label {
+    -fx-text-fill: #d0bcff;
+    -fx-font-size: 12px;
+    -fx-font-weight: 800;
+}
+
+.floating-badge-value {
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 18px;
+    -fx-font-weight: 700;
+}
+
+.detail-badge-divider {
+    -fx-background-color: #494454;
+}
+
+.detail-bento-main {
+    -fx-padding: 26;
+}
+
+.detail-side-card {
+    -fx-padding: 24;
+}
+
+.detail-media-tile {
+    -fx-background-radius: 8;
+    -fx-border-radius: 8;
+}
+
+.detail-overview-text {
+    -fx-font-size: 14px;
+    -fx-line-spacing: 2;
+    -fx-max-height: 120;
+    -fx-opacity: 0.92;
+}
+
+.vault-data-row {
+    -fx-padding: 4 0 8 0;
+    -fx-border-color: transparent transparent rgba(73, 68, 84, 0.35) transparent;
+    -fx-border-width: 0 0 1 0;
+}
+
 .detail-hero,
 .profile-hero,
 .panel,
@@ -421,6 +542,15 @@
     -fx-cursor: hand;
 }
 
+.vault-control-primary {
+    -fx-background-color: #d0bcff;
+    -fx-text-fill: #340080;
+    -fx-font-weight: 800;
+    -fx-background-radius: 8;
+    -fx-padding: 18 22;
+    -fx-cursor: hand;
+}
+
 .profile-action-button:hover {
     -fx-background-color: rgba(208, 188, 255, 0.12);
     -fx-border-color: #d0bcff;
@@ -470,15 +600,32 @@
 }
 
 .rating-block {
-    -fx-padding: 12;
-    -fx-background-color: rgba(208, 188, 255, 0.08);
-    -fx-background-radius: 8;
+    -fx-padding: 22 0 0 0;
+    -fx-background-color: transparent;
 }
 
 .rating-large {
-    -fx-text-fill: #d0bcff;
-    -fx-font-size: 34px;
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 30px;
     -fx-font-weight: 900;
+}
+
+.rating-ring {
+    -fx-min-width: 96;
+    -fx-min-height: 96;
+    -fx-max-width: 96;
+    -fx-max-height: 96;
+    -fx-background-color: rgba(208, 188, 255, 0.12);
+    -fx-background-radius: 999;
+    -fx-border-color: #d0bcff;
+    -fx-border-width: 5;
+    -fx-border-radius: 999;
+}
+
+.rating-verdict {
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 24px;
+    -fx-font-weight: 800;
 }
 
 .cover-drop {
@@ -529,6 +676,19 @@
     -fx-text-fill: #340080;
     -fx-font-size: 20px;
     -fx-font-weight: 900;
+}
+
+.avatar-text-small {
+    -fx-font-size: 11px;
+}
+
+.profile-photo-frame {
+    -fx-background-color: rgba(208, 188, 255, 0.16);
+    -fx-background-radius: 999;
+    -fx-border-color: rgba(208, 188, 255, 0.55);
+    -fx-border-width: 2;
+    -fx-border-radius: 999;
+    -fx-padding: 2;
 }
 
 .gamevault-dialog {

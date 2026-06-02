@@ -15,6 +15,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.ContentDisplay;
 import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
@@ -29,6 +30,7 @@ import javafx.scene.layout.Region;
 import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
+import javafx.stage.FileChooser;
 
 import java.awt.Desktop;
 import java.io.File;
@@ -67,6 +69,7 @@ public class MainController {
     private String profileName = "Alex Mercer";
     private String profileBio = "Digital Historian & Collector since 2018";
     private String profileTier = "Pro Curator";
+    private String profilePhotoPath = "";
 
     @FXML
     private void initialize() {
@@ -245,7 +248,7 @@ public class MainController {
         HBox header = new HBox(32);
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("profile-hero");
-        StackPane avatar = avatar("AM");
+        StackPane avatar = avatar(initialsFor(profileName), 44);
         VBox identity = new VBox(4, styledLabel(profileName, "page-title"), styledLabel(profileBio, "muted"));
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -341,6 +344,17 @@ public class MainController {
     private void showDetails(Game game) {
         activate(collectionButton);
         VBox page = pageShell();
+        page.setSpacing(36);
+        page.getChildren().add(detailHero(game));
+        page.getChildren().add(detailBody(game));
+        page.getChildren().add(relatedGames(game));
+        setContent(page);
+        statusLabel.setText("Detail : " + game.getTitle());
+    }
+
+    private void showDetailsLegacy(Game game) {
+        activate(collectionButton);
+        VBox page = pageShell();
         HBox hero = new HBox(36);
         hero.getStyleClass().add("detail-hero");
         StackPane cover = cover(game, 340, 420);
@@ -378,14 +392,189 @@ public class MainController {
         statusLabel.setText("Detail : " + game.getTitle());
     }
 
+    private Node detailHero(Game game) {
+        HBox hero = new HBox();
+        hero.getStyleClass().add("detail-hero-figma");
+
+        StackPane visual = new StackPane();
+        visual.getStyleClass().add("detail-visual-pane");
+        StackPane cover = cover(game, 420, 560);
+        cover.getStyleClass().add("detail-main-cover");
+
+        HBox floating = new HBox(22,
+                detailBadge("Current Status", game.getStatus()),
+                detailDivider(),
+                detailBadge("Platform", game.getPlatform()));
+        floating.getStyleClass().add("floating-detail-badge");
+        StackPane.setAlignment(cover, Pos.CENTER);
+        StackPane.setAlignment(floating, Pos.BOTTOM_LEFT);
+        StackPane.setMargin(floating, new Insets(0, 0, 28, 28));
+        visual.getChildren().addAll(cover, floating);
+
+        VBox info = new VBox(22);
+        info.getStyleClass().add("detail-info-pane");
+        HBox tags = new HBox(10, detailTag(game.getGenre(), "cyan-tag"), detailTag(game.getStatus(), "gold-tag"));
+        info.getChildren().addAll(
+                tags,
+                styledLabel(game.getTitle().toUpperCase(), "detail-title-figma"),
+                detailsGrid(game),
+                ratingBlock(game));
+
+        HBox.setHgrow(visual, Priority.ALWAYS);
+        HBox.setHgrow(info, Priority.ALWAYS);
+        hero.getChildren().addAll(visual, info);
+        return hero;
+    }
+
+    private Node detailBody(Game game) {
+        HBox body = new HBox(24);
+        body.setAlignment(Pos.TOP_LEFT);
+        VBox overview = new VBox(22);
+        overview.getStyleClass().add("detail-bento-main");
+        overview.setPrefWidth(620);
+        overview.setMaxWidth(700);
+        Label overviewText = styledLabel(game.getDescription(), "description");
+        overviewText.getStyleClass().add("detail-overview-text");
+        overview.getChildren().addAll(
+                styledLabel("Archival Overview", "section-title"),
+                overviewText,
+                detailMediaStrip(game));
+
+        VBox side = new VBox(22, vaultControls(game), vaultData(game));
+        side.setMinWidth(320);
+        side.setPrefWidth(320);
+        side.setMaxWidth(340);
+        HBox.setHgrow(overview, Priority.ALWAYS);
+        HBox.setHgrow(side, Priority.NEVER);
+        body.getChildren().addAll(overview, side);
+        return body;
+    }
+
+    private HBox detailMediaStrip(Game game) {
+        HBox strip = new HBox(16);
+        for (int i = 0; i < 3; i++) {
+            StackPane tile = cover(game, 150, 92);
+            tile.getStyleClass().add("detail-media-tile");
+            strip.getChildren().add(tile);
+        }
+        return strip;
+    }
+
+    private VBox vaultControls(Game game) {
+        Button favorite = new Button(game.isFavorite() ? "Remove Favorite" : "Add Favorite");
+        favorite.getStyleClass().add(game.isFavorite() ? "primary-button" : "vault-control-primary");
+        favorite.setMaxWidth(Double.MAX_VALUE);
+        favorite.setOnAction(event -> {
+            try {
+                service.toggleFavorite(game);
+            } catch (GameValidationException ex) {
+                showError(ex.getMessage());
+                return;
+            }
+            showDetails(game);
+        });
+
+        Button edit = new Button("Edit Entry");
+        edit.setOnAction(event -> openForm(game));
+        edit.getStyleClass().add("outline-button");
+        edit.setMaxWidth(Double.MAX_VALUE);
+
+        Button delete = new Button("Delete from Vault");
+        delete.setOnAction(event -> confirmDelete(game));
+        delete.getStyleClass().add("danger-button");
+        delete.setMaxWidth(Double.MAX_VALUE);
+
+        VBox controls = new VBox(18, styledLabel("Vault Controls", "field-label"), favorite, edit, delete);
+        controls.getStyleClass().add("detail-side-card");
+        return controls;
+    }
+
+    private VBox vaultData(Game game) {
+        VBox data = new VBox(12,
+                styledLabel("Vault Data", "field-label"),
+                vaultDataRow("Added On", game.getAddedAt() == null ? "-" : game.getAddedAt().toLocalDate().toString()),
+                vaultDataRow("Storage Used", storageEstimate(game)),
+                vaultDataRow("Achievements", achievementEstimate(game)));
+        data.getStyleClass().add("detail-side-card");
+        return data;
+    }
+
+    private Node relatedGames(Game game) {
+        List<Game> related = service.allGames().stream()
+                .filter(candidate -> candidate.getId() == null || !candidate.getId().equals(game.getId()))
+                .filter(candidate -> game.getPlatform().equals(candidate.getPlatform()))
+                .limit(4)
+                .toList();
+        if (related.isEmpty()) {
+            return new VBox();
+        }
+
+        HBox header = new HBox();
+        header.setAlignment(Pos.CENTER_LEFT);
+        header.getChildren().add(styledLabel("More on " + game.getPlatform(), "section-title"));
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        Button viewFull = new Button("View Full Archival ->");
+        viewFull.getStyleClass().add("link-button");
+        viewFull.setOnAction(event -> {
+            selectedPlatform = game.getPlatform();
+            showCollection();
+        });
+        header.getChildren().addAll(spacer, viewFull);
+
+        HBox cards = new HBox(22);
+        related.forEach(candidate -> cards.getChildren().add(gameCard(candidate)));
+        return new VBox(22, header, cards);
+    }
+
+    private Label detailTag(String value, String styleClass) {
+        Label tag = styledLabel(value, styleClass);
+        tag.getStyleClass().add("detail-tag");
+        return tag;
+    }
+
+    private VBox detailBadge(String label, String value) {
+        return new VBox(2, styledLabel(label.toUpperCase(), "floating-badge-label"), styledLabel(value, "floating-badge-value"));
+    }
+
+    private Region detailDivider() {
+        Region divider = new Region();
+        divider.getStyleClass().add("detail-badge-divider");
+        divider.setPrefWidth(2);
+        divider.setPrefHeight(34);
+        return divider;
+    }
+
+    private HBox vaultDataRow(String label, String value) {
+        HBox row = new HBox(12);
+        row.getStyleClass().add("vault-data-row");
+        row.setAlignment(Pos.CENTER_LEFT);
+        row.getChildren().add(styledLabel(label, "description"));
+        Region spacer = new Region();
+        HBox.setHgrow(spacer, Priority.ALWAYS);
+        row.getChildren().addAll(spacer, styledLabel(value, "detail-value"));
+        return row;
+    }
+
+    private String storageEstimate(Game game) {
+        int gb = Math.max(8, (int) Math.round(game.getRating() * 9 + game.getReleaseYear() % 7));
+        return gb + "." + (game.getReleaseYear() % 10) + " GB";
+    }
+
+    private String achievementEstimate(Game game) {
+        int total = 50;
+        int unlocked = Math.min(total, Math.max(8, (int) Math.round(game.getRating() * 4)));
+        return unlocked + " / " + total;
+    }
+
     private GridPane detailsGrid(Game game) {
         GridPane grid = new GridPane();
         grid.setHgap(28);
         grid.setVgap(10);
         addDetail(grid, 0, 0, "Developer", game.getDeveloper());
         addDetail(grid, 1, 0, "Publisher", game.getPublisher());
-        addDetail(grid, 0, 1, "Release Year", String.valueOf(game.getReleaseYear()));
-        addDetail(grid, 1, 1, "Status", game.getStatus());
+        addDetail(grid, 0, 1, "Platform", game.getPlatform());
+        addDetail(grid, 1, 1, "Release Year", String.valueOf(game.getReleaseYear()));
         return grid;
     }
 
@@ -394,11 +583,15 @@ public class MainController {
         grid.add(box, col, row);
     }
 
-    private VBox ratingBlock(Game game) {
-        VBox box = new VBox(2);
+    private HBox ratingBlock(Game game) {
+        StackPane score = new StackPane(styledLabel(String.format("%.1f", game.getRating()), "rating-large"));
+        score.getStyleClass().add("rating-ring");
+        VBox verdict = new VBox(2,
+                styledLabel(game.getRating() >= 9 ? "Masterpiece" : "Curator Approved", "rating-verdict"),
+                styledLabel("Based on Vault Ratings", "muted"));
+        HBox box = new HBox(24, score, verdict);
+        box.setAlignment(Pos.CENTER_LEFT);
         box.getStyleClass().add("rating-block");
-        box.getChildren().addAll(styledLabel(String.format("%.1f", game.getRating()), "rating-large"),
-                styledLabel(game.getRating() >= 9 ? "Masterpiece" : "Curator Approved", "muted"));
         return box;
     }
 
@@ -448,7 +641,7 @@ public class MainController {
         collectionButton.setText(french ? "▣  Ma collection" : "▣  My Collection");
         statsButton.setText(french ? "⌁  Statistiques" : "⌁  Statistics");
         settingsButton.setText(french ? "⚙  Parametres" : "⚙  Settings");
-        profileButton.setText(initialsFor(profileName) + "  " + profileName + "\n     " + (french ? translateTier(profileTier) : profileTier));
+        refreshProfileButton();
         addGameButton.setText(french ? "+ AJOUTER UN JEU" : "+ ADD GAME");
         searchField.setPromptText(french ? "Rechercher dans la collection..." : "Search your archive...");
         sortByLabel.setText(french ? "Trier par :" : "Sort by:");
@@ -575,13 +768,41 @@ public class MainController {
         TextField nameField = new TextField(profileName);
         TextField bioField = new TextField(profileBio);
         TextField tierField = new TextField(profileTier);
+        TextField photoField = new TextField(profilePhotoPath);
+        photoField.setEditable(false);
+        photoField.setPromptText(t("No profile photo selected", "Aucune photo de profil selectionnee"));
+
+        StackPane photoPreview = avatar(initialsFor(profileName), 34);
+        final String[] selectedPhotoPath = {profilePhotoPath};
+        nameField.textProperty().addListener((observable, oldValue, newValue) -> {
+            if (selectedPhotoMissing(selectedPhotoPath[0])) {
+                photoPreview.getChildren().setAll(profilePhotoNode(34, initialsFor(newValue), selectedPhotoPath[0]));
+            }
+        });
+        Button choosePhotoButton = settingsButton(t("Choose Photo", "Choisir une photo"));
+        choosePhotoButton.setOnAction(event -> {
+            FileChooser chooser = new FileChooser();
+            chooser.setTitle(t("Choose profile photo", "Choisir une photo de profil"));
+            chooser.getExtensionFilters().add(new FileChooser.ExtensionFilter("Images", "*.jpg", "*.jpeg", "*.png", "*.gif"));
+            File file = chooser.showOpenDialog(root.getScene().getWindow());
+            if (file != null) {
+                selectedPhotoPath[0] = copyProfilePhoto(file);
+                photoField.setText(selectedPhotoPath[0]);
+                photoPreview.getChildren().setAll(profilePhotoNode(34, initialsFor(nameField.getText()), selectedPhotoPath[0]));
+            }
+        });
+        HBox photoRow = new HBox(12, photoPreview, new VBox(8, photoField, choosePhotoButton));
+        photoRow.setAlignment(Pos.CENTER_LEFT);
+
         VBox form = new VBox(12,
                 styledLabel(t("Display name", "Nom affiche"), "field-label"),
                 nameField,
                 styledLabel(t("Bio", "Bio"), "field-label"),
                 bioField,
                 styledLabel(t("Membership label", "Statut du membre"), "field-label"),
-                tierField);
+                tierField,
+                styledLabel(t("Profile photo", "Photo de profil"), "field-label"),
+                photoRow);
 
         Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
         dialog.setTitle(t("Edit Profile", "Modifier le profil"));
@@ -596,6 +817,7 @@ public class MainController {
             profileName = nameField.getText().trim();
             profileBio = blankToDefault(bioField.getText(), profileBio);
             profileTier = blankToDefault(tierField.getText(), profileTier);
+            profilePhotoPath = blankToDefault(selectedPhotoPath[0], "");
             applyLanguage();
             showProfile();
             statusLabel.setText(t("Profile updated", "Profil mis a jour"));
@@ -723,10 +945,57 @@ public class MainController {
         return area;
     }
 
-    private StackPane avatar(String text) {
-        Circle circle = new Circle(44);
+    private String copyProfilePhoto(File file) {
+        try {
+            Files.createDirectories(Path.of("data", "profile"));
+            String extension = extensionOf(file.getName());
+            Path target = Path.of("data", "profile", "profile-photo" + extension);
+            Files.copy(file.toPath(), target, StandardCopyOption.REPLACE_EXISTING);
+            return target.toAbsolutePath().normalize().toString();
+        } catch (IOException exception) {
+            showError(t("Unable to import the profile photo.", "Impossible d'importer la photo de profil."));
+            return profilePhotoPath;
+        }
+    }
+
+    private String extensionOf(String fileName) {
+        int index = fileName == null ? -1 : fileName.lastIndexOf('.');
+        return index >= 0 ? fileName.substring(index).toLowerCase() : ".png";
+    }
+
+    private boolean selectedPhotoMissing(String photoPath) {
+        return photoPath == null || photoPath.isBlank() || !new File(photoPath).exists();
+    }
+
+    private void refreshProfileButton() {
+        profileButton.setText(profileName + "\n" + (french ? translateTier(profileTier) : profileTier));
+        profileButton.setGraphic(profilePhotoNode(24, initialsFor(profileName), profilePhotoPath));
+        profileButton.setContentDisplay(ContentDisplay.LEFT);
+        profileButton.setGraphicTextGap(12);
+    }
+
+    private StackPane avatar(String text, double radius) {
+        return new StackPane(profilePhotoNode(radius, text, profilePhotoPath));
+    }
+
+    private Node profilePhotoNode(double radius, String fallbackText, String photoPath) {
+        if (photoPath != null && !photoPath.isBlank() && new File(photoPath).exists()) {
+            ImageView image = new ImageView(new Image(new File(photoPath).toURI().toString(), radius * 2, radius * 2, false, true));
+            image.setFitWidth(radius * 2);
+            image.setFitHeight(radius * 2);
+            image.setPreserveRatio(false);
+            image.setClip(new Circle(radius, radius, radius));
+            StackPane frame = new StackPane(image);
+            frame.getStyleClass().add("profile-photo-frame");
+            return frame;
+        }
+        Circle circle = new Circle(radius);
         circle.getStyleClass().add("avatar-circle");
-        return new StackPane(circle, styledLabel(text, "avatar-text"));
+        Label initials = styledLabel(fallbackText, "avatar-text");
+        if (radius < 32) {
+            initials.getStyleClass().add("avatar-text-small");
+        }
+        return new StackPane(circle, initials);
     }
 
     private void activate(Button active) {

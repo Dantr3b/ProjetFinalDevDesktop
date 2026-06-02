@@ -3,6 +3,8 @@ package fr.retrosphere.gamevault.controller;
 import fr.retrosphere.gamevault.model.Game;
 import fr.retrosphere.gamevault.service.GameService;
 import fr.retrosphere.gamevault.service.GameValidationException;
+import fr.retrosphere.gamevault.service.SteamGameApiClient;
+import javafx.application.Platform;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
@@ -15,6 +17,9 @@ import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.CompletionException;
 import java.util.function.Consumer;
 
 public class GameFormController {
@@ -30,11 +35,13 @@ public class GameFormController {
     @FXML private Label ratingLabel;
     @FXML private TextArea descriptionArea;
     @FXML private Label errorLabel;
+    @FXML private Button autoFillButton;
     @FXML private Button coverButton;
     @FXML private ImageView coverPreview;
     @FXML private Label coverPlaceholder;
 
     private final GameService service = new GameService();
+    private final SteamGameApiClient steamGameApiClient = new SteamGameApiClient();
     private Consumer<Game> onSaved;
     private Runnable onCancel;
     private Game editedGame;
@@ -89,6 +96,35 @@ public class GameFormController {
     }
 
     @FXML
+    private void autoFillFromApi() {
+        String query = titleField.getText() == null ? "" : titleField.getText().trim();
+        if (query.isBlank()) {
+            errorLabel.setText("Entre d'abord le titre du jeu pour lancer la recherche Steam.");
+            return;
+        }
+
+        setAutoFillLoading(true);
+        CompletableFuture.supplyAsync(() -> {
+            try {
+                return steamGameApiClient.fetchGame(query);
+            } catch (IOException | InterruptedException exception) {
+                if (exception instanceof InterruptedException) {
+                    Thread.currentThread().interrupt();
+                }
+                throw new CompletionException(exception);
+            }
+        }).whenComplete((result, throwable) -> Platform.runLater(() -> {
+            setAutoFillLoading(false);
+            if (throwable != null) {
+                errorLabel.setText("Impossible de recuperer les infos Steam pour ce jeu.");
+                return;
+            }
+            applyApiResult(result);
+            errorLabel.setText("Informations recuperees depuis Steam.");
+        }));
+    }
+
+    @FXML
     private void save() {
         try {
             Game game = editedGame == null ? new Game() : editedGame;
@@ -119,6 +155,48 @@ public class GameFormController {
     private void cancel() {
         if (onCancel != null) {
             onCancel.run();
+        }
+    }
+
+    private void applyApiResult(SteamGameApiClient.GameApiResult result) {
+        setIfPresent(titleField, result.title());
+        setIfPresent(developerField, result.developer());
+        setIfPresent(publisherField, result.publisher());
+        setIfPresent(yearField, result.releaseYear());
+        setIfPresent(genreField, result.genre());
+        setIfPresent(descriptionArea, result.description());
+
+        if (platformCombo.getValue() == null || platformCombo.getValue().isBlank()) {
+            platformCombo.setValue("PC");
+        }
+        if (statusCombo.getValue() == null || statusCombo.getValue().isBlank()) {
+            statusCombo.setValue("Owned");
+        }
+        if (result.coverPath() != null && !result.coverPath().isBlank()) {
+            File coverFile = new File(result.coverPath());
+            coverPath = coverFile.getAbsolutePath();
+            coverButton.setText("Cover selected\n" + coverFile.getName() + "\nClick to replace");
+            updateCoverPreview(coverFile);
+        }
+    }
+
+    private void setAutoFillLoading(boolean loading) {
+        autoFillButton.setDisable(loading);
+        autoFillButton.setText(loading ? "Searching Steam..." : "Auto-fill from Steam");
+        if (loading) {
+            errorLabel.setText("Recherche Steam en cours...");
+        }
+    }
+
+    private void setIfPresent(TextField field, String value) {
+        if (value != null && !value.isBlank()) {
+            field.setText(value.trim());
+        }
+    }
+
+    private void setIfPresent(TextArea field, String value) {
+        if (value != null && !value.isBlank()) {
+            field.setText(value.trim());
         }
     }
 
