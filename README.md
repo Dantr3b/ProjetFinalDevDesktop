@@ -103,6 +103,8 @@ src/main/java/fr/retrosphere/gamevault
     ```
 
 ---
+## Démonstration
+[![Démonstration vidéo](https://via.placeholder.com/800x450?text=Voir+la+video)](https://drive.google.com/file/d/XXXXXXXX/view)
 
 ## ⚙️ Configuration & Base de Données
 
