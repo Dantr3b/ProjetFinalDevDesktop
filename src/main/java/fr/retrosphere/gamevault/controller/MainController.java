@@ -15,6 +15,7 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
+import javafx.scene.control.DialogPane;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
 import javafx.scene.control.ToggleButton;
@@ -62,6 +63,10 @@ public class MainController {
     private String selectedPlatform = "All Platforms";
     private boolean highDensityGrid;
     private boolean french;
+    private boolean privateAccount;
+    private String profileName = "Alex Mercer";
+    private String profileBio = "Digital Historian & Collector since 2018";
+    private String profileTier = "Pro Curator";
 
     @FXML
     private void initialize() {
@@ -241,7 +246,7 @@ public class MainController {
         header.setAlignment(Pos.CENTER_LEFT);
         header.getStyleClass().add("profile-hero");
         StackPane avatar = avatar("AM");
-        VBox identity = new VBox(4, styledLabel("Alex Mercer", "page-title"), styledLabel("Digital Historian & Collector since 2018", "muted"));
+        VBox identity = new VBox(4, styledLabel(profileName, "page-title"), styledLabel(profileBio, "muted"));
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
         Button share = new Button("Share");
@@ -256,7 +261,7 @@ public class MainController {
                 metric("Achievements", "432", "tracked")));
         page.getChildren().add(profileActions(games));
         setContent(page);
-        statusLabel.setText("Profil utilisateur");
+        statusLabel.setText(french ? "Profil utilisateur" : "User profile");
     }
 
     private void openForm(Game game) {
@@ -402,6 +407,7 @@ public class MainController {
                 "Supprimer definitivement \"" + game.getTitle() + "\" de la collection ?",
                 ButtonType.CANCEL, ButtonType.OK);
         alert.setHeaderText("Confirmation de suppression");
+        styleDialog(alert, "danger-modal");
         alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(button -> {
             service.delete(game);
             showCollection();
@@ -442,7 +448,7 @@ public class MainController {
         collectionButton.setText(french ? "▣  Ma collection" : "▣  My Collection");
         statsButton.setText(french ? "⌁  Statistiques" : "⌁  Statistics");
         settingsButton.setText(french ? "⚙  Parametres" : "⚙  Settings");
-        profileButton.setText(french ? "AM  Alex Mercer\n     Conservateur Pro" : "AM  Alex Mercer\n     Pro Curator");
+        profileButton.setText(initialsFor(profileName) + "  " + profileName + "\n     " + (french ? translateTier(profileTier) : profileTier));
         addGameButton.setText(french ? "+ AJOUTER UN JEU" : "+ ADD GAME");
         searchField.setPromptText(french ? "Rechercher dans la collection..." : "Search your archive...");
         sortByLabel.setText(french ? "Trier par :" : "Sort by:");
@@ -558,6 +564,106 @@ public class MainController {
         return button;
     }
 
+    private Button profileActionButton(String label, String suffix) {
+        Button button = new Button(label + "    " + suffix);
+        button.getStyleClass().add("profile-action-button");
+        button.setMaxWidth(Double.MAX_VALUE);
+        return button;
+    }
+
+    private void editProfile() {
+        TextField nameField = new TextField(profileName);
+        TextField bioField = new TextField(profileBio);
+        TextField tierField = new TextField(profileTier);
+        VBox form = new VBox(12,
+                styledLabel(t("Display name", "Nom affiche"), "field-label"),
+                nameField,
+                styledLabel(t("Bio", "Bio"), "field-label"),
+                bioField,
+                styledLabel(t("Membership label", "Statut du membre"), "field-label"),
+                tierField);
+
+        Alert dialog = new Alert(Alert.AlertType.CONFIRMATION);
+        dialog.setTitle(t("Edit Profile", "Modifier le profil"));
+        dialog.setHeaderText(t("Update curator profile", "Mettre a jour le profil"));
+        dialog.getDialogPane().setContent(form);
+        styleDialog(dialog, "profile-modal");
+        dialog.showAndWait().filter(ButtonType.OK::equals).ifPresent(button -> {
+            if (nameField.getText() == null || nameField.getText().isBlank()) {
+                showError(t("The profile name is required.", "Le nom du profil est obligatoire."));
+                return;
+            }
+            profileName = nameField.getText().trim();
+            profileBio = blankToDefault(bioField.getText(), profileBio);
+            profileTier = blankToDefault(tierField.getText(), profileTier);
+            applyLanguage();
+            showProfile();
+            statusLabel.setText(t("Profile updated", "Profil mis a jour"));
+        });
+    }
+
+    private void exportCollectionCsv() {
+        try {
+            Files.createDirectories(Path.of("data", "exports"));
+            String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+            Path target = Path.of("data", "exports", "gamevault-collection-" + timestamp + ".csv");
+            StringBuilder csv = new StringBuilder("Title,Developer,Publisher,Release Year,Platform,Genre,Status,Rating,Favorite\n");
+            for (Game game : service.allGames()) {
+                csv.append(csv(game.getTitle())).append(',')
+                        .append(csv(game.getDeveloper())).append(',')
+                        .append(csv(game.getPublisher())).append(',')
+                        .append(game.getReleaseYear()).append(',')
+                        .append(csv(game.getPlatform())).append(',')
+                        .append(csv(game.getGenre())).append(',')
+                        .append(csv(game.getStatus())).append(',')
+                        .append(game.getRating()).append(',')
+                        .append(game.isFavorite())
+                        .append('\n');
+            }
+            Files.writeString(target, csv.toString());
+            showInfo(t("Export created", "Export cree"), target.toAbsolutePath().normalize().toString());
+            statusLabel.setText(t("Collection exported", "Collection exportee"));
+        } catch (IOException exception) {
+            showError(t("Unable to export the collection.", "Impossible d'exporter la collection."));
+        }
+    }
+
+    private void toggleAccountPrivacy() {
+        privateAccount = !privateAccount;
+        showInfo(t("Account Privacy", "Confidentialite du compte"),
+                privateAccount
+                        ? t("Your profile is now private in GameVault.", "Le profil est maintenant prive dans GameVault.")
+                        : t("Your profile is now public in GameVault.", "Le profil est maintenant public dans GameVault."));
+        showProfile();
+    }
+
+    private String blankToDefault(String value, String fallback) {
+        return value == null || value.isBlank() ? fallback : value.trim();
+    }
+
+    private String csv(String value) {
+        String safe = value == null ? "" : value;
+        return "\"" + safe.replace("\"", "\"\"") + "\"";
+    }
+
+    private String initialsFor(String name) {
+        if (name == null || name.isBlank()) {
+            return "AM";
+        }
+        String[] parts = name.trim().split("\\s+");
+        if (parts.length == 1) {
+            return parts[0].substring(0, Math.min(2, parts[0].length())).toUpperCase();
+        }
+        return (parts[0].substring(0, 1) + parts[1].substring(0, 1)).toUpperCase();
+    }
+
+    private String translateTier(String tier) {
+        if ("Pro Curator".equalsIgnoreCase(tier)) {
+            return "Conservateur Pro";
+        }
+        return tier;
+    }
+
     private void openDatabaseFolder() {
         Path folder = Path.of("data").toAbsolutePath().normalize();
         try {
@@ -593,12 +699,22 @@ public class MainController {
 
     private Node profileActions(List<Game> games) {
         HBox area = new HBox(24);
-        VBox actions = new VBox(16, styledLabel("Quick Actions", "section-title"),
-                styledLabel("Edit Profile    >", "detail-value"),
-                styledLabel("Export Collection    CSV / PDF", "detail-value"),
-                styledLabel("Account Privacy    >", "detail-value"));
+        Button editProfile = profileActionButton(t("Edit Profile", "Modifier le profil"), ">");
+        editProfile.setOnAction(event -> editProfile());
+
+        Button exportCollection = profileActionButton(t("Export Collection", "Exporter la collection"), "CSV");
+        exportCollection.setOnAction(event -> exportCollectionCsv());
+
+        Button accountPrivacy = profileActionButton(t("Account Privacy", "Confidentialite du compte"),
+                privateAccount ? t("Private", "Prive") : t("Public", "Public"));
+        accountPrivacy.setOnAction(event -> toggleAccountPrivacy());
+
+        VBox actions = new VBox(16, styledLabel(t("Quick Actions", "Actions rapides"), "section-title"),
+                editProfile,
+                exportCollection,
+                accountPrivacy);
         actions.getStyleClass().add("panel");
-        VBox recent = new VBox(16, styledLabel("Recently Archived", "section-title"));
+        VBox recent = new VBox(16, styledLabel(t("Recently Archived", "Archives recentes"), "section-title"));
         recent.getStyleClass().add("wide-panel");
         HBox recentCards = new HBox(18);
         games.stream().limit(3).forEach(game -> recentCards.getChildren().add(gameCard(game)));
@@ -624,12 +740,23 @@ public class MainController {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setHeaderText("Erreur GameVault");
+        styleDialog(alert, "danger-modal");
         alert.showAndWait();
     }
 
     private void showInfo(String title, String message) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
         alert.setHeaderText(title);
+        styleDialog(alert, "info-modal");
         alert.showAndWait();
+    }
+
+    private void styleDialog(Alert alert, String extraStyleClass) {
+        DialogPane pane = alert.getDialogPane();
+        pane.getStylesheets().add(MainApp.class.getResource("/styles/gamevault.css").toExternalForm());
+        pane.getStyleClass().add("gamevault-dialog");
+        pane.getStyleClass().add(extraStyleClass);
+        pane.setMinWidth(460);
+        pane.lookupAll(".button").forEach(node -> node.getStyleClass().add("dialog-action-button"));
     }
 }

@@ -408,6 +408,24 @@
     -fx-border-color: #d0bcff;
 }
 
+.profile-action-button {
+    -fx-background-color: rgba(45, 52, 73, 0.42);
+    -fx-background-radius: 8;
+    -fx-border-color: transparent;
+    -fx-border-radius: 8;
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 15px;
+    -fx-font-weight: 700;
+    -fx-alignment: center-left;
+    -fx-padding: 12 16;
+    -fx-cursor: hand;
+}
+
+.profile-action-button:hover {
+    -fx-background-color: rgba(208, 188, 255, 0.12);
+    -fx-border-color: #d0bcff;
+}
+
 .light-mode,
 .light-mode .content-pane,
 .light-mode .page,
@@ -494,4 +512,86 @@
     -fx-text-fill: #340080;
     -fx-font-size: 20px;
     -fx-font-weight: 900;
+}
+
+.gamevault-dialog {
+    -fx-background-color: #0b1326;
+    -fx-border-color: rgba(208, 188, 255, 0.28);
+    -fx-border-width: 1;
+}
+
+.gamevault-dialog > .content {
+    -fx-background-color: #0b1326;
+    -fx-text-fill: #cbc3d7;
+    -fx-font-size: 14px;
+    -fx-padding: 18 24 20 24;
+}
+
+.gamevault-dialog:header .header-panel {
+    -fx-background-color: linear-gradient(to right, rgba(160, 120, 255, 0.22), rgba(76, 215, 246, 0.08));
+    -fx-padding: 22 24 18 24;
+}
+
+.gamevault-dialog:header .header-panel .label {
+    -fx-text-fill: #dae2fd;
+    -fx-font-size: 19px;
+    -fx-font-weight: 800;
+}
+
+.gamevault-dialog .label {
+    -fx-text-fill: #cbc3d7;
+}
+
+.gamevault-dialog .field-label {
+    -fx-text-fill: #958ea0;
+    -fx-font-size: 11px;
+    -fx-font-weight: 800;
+}
+
+.gamevault-dialog .text-field {
+    -fx-background-color: #171f33;
+    -fx-border-color: #494454;
+    -fx-border-radius: 8;
+    -fx-background-radius: 8;
+    -fx-text-fill: #dae2fd;
+    -fx-prompt-text-fill: #6b7280;
+    -fx-padding: 10 12;
+}
+
+.gamevault-dialog .button-bar {
+    -fx-background-color: #0b1326;
+    -fx-padding: 14 24 22 24;
+}
+
+.dialog-action-button {
+    -fx-background-color: #2d3449;
+    -fx-background-radius: 8;
+    -fx-border-color: #494454;
+    -fx-border-radius: 8;
+    -fx-text-fill: #dae2fd;
+    -fx-font-weight: 800;
+    -fx-padding: 9 18;
+    -fx-cursor: hand;
+}
+
+.dialog-action-button:hover {
+    -fx-border-color: #d0bcff;
+}
+
+.gamevault-dialog .button-bar .button:default {
+    -fx-background-color: #d0bcff;
+    -fx-text-fill: #340080;
+    -fx-border-color: transparent;
+}
+
+.danger-modal:header .header-panel {
+    -fx-background-color: linear-gradient(to right, rgba(208, 107, 122, 0.28), rgba(160, 120, 255, 0.08));
+}
+
+.info-modal:header .header-panel {
+    -fx-background-color: linear-gradient(to right, rgba(76, 215, 246, 0.20), rgba(160, 120, 255, 0.10));
+}
+
+.profile-modal:header .header-panel {
+    -fx-background-color: linear-gradient(to right, rgba(160, 120, 255, 0.26), rgba(208, 188, 255, 0.08));
 }

@@ -21,6 +21,7 @@ public class MainApp extends Application {
         stage.setTitle("GameVault - RetroSphere");
         stage.setMinWidth(1060);
         stage.setMinHeight(720);
+        stage.setMaximized(true);
         stage.setScene(scene);
         stage.show();
     }

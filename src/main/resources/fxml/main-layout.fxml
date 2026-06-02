@@ -37,10 +37,7 @@
         <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="topbar">
             <TextField fx:id="searchField" promptText="Search your archive..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
             <Button fx:id="addGameButton" onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
-            <Label text="◌" styleClass="top-icon"/>
-            <Button onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
             <Button fx:id="favoritesButton" onAction="#showFavorites" text="♡" styleClass="top-icon-button"/>
-            <Label text="◎" styleClass="top-icon"/>
         </HBox>
     </top>
     <center>
