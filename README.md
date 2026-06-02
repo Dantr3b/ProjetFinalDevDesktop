@@ -153,7 +153,6 @@ L'interface graphique a été entièrement prototypée sur Figma afin de garanti
 
 ## 👥 Membres du Projet
 
-*   **RetroSphere Team** - Développement, Conception UI & Intégration BDD.
 - **Roux Killian**
 - **Morvan Thibaud**
 - **EL AJLI Zayd**
