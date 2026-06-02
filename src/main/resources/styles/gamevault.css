@@ -3,6 +3,13 @@
     -fx-font-family: "Inter", "Segoe UI", "Arial";
 }
 
+.startup-error {
+    -fx-background-color: #0b1326;
+    -fx-padding: 72;
+    -fx-alignment: center-left;
+    -fx-font-family: "Inter", "Segoe UI", "Arial";
+}
+
 .sidebar {
     -fx-background-color: rgba(19, 27, 46, 0.94);
     -fx-border-color: transparent #494454 transparent transparent;

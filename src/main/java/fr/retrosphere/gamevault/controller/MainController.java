@@ -66,6 +66,7 @@ public class MainController {
     private boolean highDensityGrid;
     private boolean french;
     private boolean privateAccount;
+    private boolean dataAccessWarningShown;
     private String profileName = "Alex Mercer";
     private String profileBio = "Digital Historian & Collector since 2018";
     private String profileTier = "Pro Curator";
@@ -85,7 +86,8 @@ public class MainController {
     public void showCollection() {
         activate(collectionButton);
         if (favoritesButton != null) favoritesButton.setText("♡");
-        List<Game> games = service.search(searchField.getText(), selectedPlatform, sortCombo.getValue());
+        List<Game> allGames = safeAllGames();
+        List<Game> games = safeSearch(searchField.getText(), selectedPlatform, sortCombo.getValue());
         VBox page = pageShell();
         page.getChildren().add(filterBar());
 
@@ -99,8 +101,8 @@ public class MainController {
 
         page.getChildren().add(grid);
         Label footer = new Label(french
-                ? "Affichage de " + games.size() + " jeu(x) sur " + service.allGames().size() + " dans le coffre."
-                : "Showing " + games.size() + " of " + service.allGames().size() + " titles in your archival vault.");
+                ? "Affichage de " + games.size() + " jeu(x) sur " + allGames.size() + " dans le coffre."
+                : "Showing " + games.size() + " of " + allGames.size() + " titles in your archival vault.");
         footer.getStyleClass().add("muted-center");
         page.getChildren().add(footer);
         setContent(page);
@@ -111,7 +113,7 @@ public class MainController {
     private void showFavorites() {
         activate(null);
         if (favoritesButton != null) favoritesButton.setText("♥");
-        List<Game> games = service.favorites();
+        List<Game> games = safeFavorites();
         VBox page = pageShell();
         page.getChildren().add(titleBlock("Favoris", games.size() + " / 5 jeux dans vos favoris."));
         if (games.isEmpty()) {
@@ -138,7 +140,7 @@ public class MainController {
     @FXML
     private void showStatistics() {
         activate(statsButton);
-        List<Game> games = service.allGames();
+        List<Game> games = safeAllGames();
         VBox page = pageShell();
         page.getChildren().add(titleBlock(t("Collection Statistics", "Statistiques de collection"),
                 t("An overview of your digital archive performance and library growth.", "Vue d'ensemble de votre archive et de sa croissance.")));
@@ -243,7 +245,7 @@ public class MainController {
     @FXML
     private void showProfile() {
         activate(profileButton);
-        List<Game> games = service.allGames();
+        List<Game> games = safeAllGames();
         VBox page = pageShell();
         HBox header = new HBox(32);
         header.setAlignment(Pos.CENTER_LEFT);
@@ -500,7 +502,7 @@ public class MainController {
     }
 
     private Node relatedGames(Game game) {
-        List<Game> related = service.allGames().stream()
+        List<Game> related = safeAllGames().stream()
                 .filter(candidate -> candidate.getId() == null || !candidate.getId().equals(game.getId()))
                 .filter(candidate -> game.getPlatform().equals(candidate.getPlatform()))
                 .limit(4)
@@ -602,9 +604,13 @@ public class MainController {
         alert.setHeaderText("Confirmation de suppression");
         styleDialog(alert, "danger-modal");
         alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(button -> {
-            service.delete(game);
-            showCollection();
-            statusLabel.setText("Jeu supprime : " + game.getTitle());
+            try {
+                service.delete(game);
+                showCollection();
+                statusLabel.setText("Jeu supprime : " + game.getTitle());
+            } catch (RuntimeException exception) {
+                showError("Impossible de supprimer ce jeu pour le moment.");
+            }
         });
     }
 
@@ -635,6 +641,44 @@ public class MainController {
 
     private void setContent(Node node) {
         contentPane.getChildren().setAll(node);
+    }
+
+    private List<Game> safeAllGames() {
+        try {
+            dataAccessWarningShown = false;
+            return service.allGames();
+        } catch (RuntimeException exception) {
+            notifyDataAccessProblem();
+            return List.of();
+        }
+    }
+
+    private List<Game> safeSearch(String query, String platform, String sort) {
+        try {
+            dataAccessWarningShown = false;
+            return service.search(query, platform, sort);
+        } catch (RuntimeException exception) {
+            notifyDataAccessProblem();
+            return List.of();
+        }
+    }
+
+    private List<Game> safeFavorites() {
+        try {
+            dataAccessWarningShown = false;
+            return service.favorites();
+        } catch (RuntimeException exception) {
+            notifyDataAccessProblem();
+            return List.of();
+        }
+    }
+
+    private void notifyDataAccessProblem() {
+        if (!dataAccessWarningShown) {
+            dataAccessWarningShown = true;
+            statusLabel.setText("Erreur de lecture de la collection.");
+            showError("Impossible de lire la collection. Verifiez la base de donnees ou la configuration.");
+        }
     }
 
     private void applyLanguage() {
@@ -830,7 +874,7 @@ public class MainController {
             String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
             Path target = Path.of("data", "exports", "gamevault-collection-" + timestamp + ".csv");
             StringBuilder csv = new StringBuilder("Title,Developer,Publisher,Release Year,Platform,Genre,Status,Rating,Favorite\n");
-            for (Game game : service.allGames()) {
+            for (Game game : safeAllGames()) {
                 csv.append(csv(game.getTitle())).append(',')
                         .append(csv(game.getDeveloper())).append(',')
                         .append(csv(game.getPublisher())).append(',')

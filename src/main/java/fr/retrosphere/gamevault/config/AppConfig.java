@@ -13,7 +13,8 @@ public final class AppConfig {
                 PROPERTIES.load(input);
             }
         } catch (IOException exception) {
-            throw new IllegalStateException("Impossible de charger application.properties", exception);
+            // Missing or unreadable configuration should not prevent the app from using safe defaults.
+            System.err.println("Impossible de charger application.properties. Valeurs par defaut utilisees.");
         }
     }
 
