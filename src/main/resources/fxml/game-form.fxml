@@ -6,9 +6,11 @@
 <?import javafx.scene.control.Slider?>
 <?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
+<?import javafx.scene.image.ImageView?>
 <?import javafx.scene.layout.GridPane?>
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
 <?import javafx.scene.layout.VBox?>
 
 <HBox spacing="32.0" styleClass="form-screen"
@@ -58,6 +60,10 @@
     <VBox spacing="20.0" prefWidth="320.0">
         <VBox spacing="8.0">
             <Label text="BOX ART ARCHIVE" styleClass="field-label"/>
+            <StackPane styleClass="cover-preview-frame">
+                <ImageView fx:id="coverPreview" fitWidth="300.0" fitHeight="400.0" preserveRatio="true" smooth="true"/>
+                <Label fx:id="coverPlaceholder" text="No cover selected" styleClass="cover-placeholder"/>
+            </StackPane>
             <Button fx:id="coverButton" onAction="#chooseCover" text="▧&#10;Choose Cover Art&#10;JPG, PNG, GIF" maxWidth="Infinity" styleClass="cover-drop"/>
         </VBox>
         <VBox spacing="8.0" styleClass="tip-panel">

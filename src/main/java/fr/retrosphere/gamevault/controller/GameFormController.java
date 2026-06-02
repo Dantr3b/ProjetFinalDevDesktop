@@ -10,6 +10,8 @@ import javafx.scene.control.Label;
 import javafx.scene.control.Slider;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.image.Image;
+import javafx.scene.image.ImageView;
 import javafx.stage.FileChooser;
 
 import java.io.File;
@@ -29,6 +31,8 @@ public class GameFormController {
     @FXML private TextArea descriptionArea;
     @FXML private Label errorLabel;
     @FXML private Button coverButton;
+    @FXML private ImageView coverPreview;
+    @FXML private Label coverPlaceholder;
 
     private final GameService service = new GameService();
     private Consumer<Game> onSaved;
@@ -43,6 +47,7 @@ public class GameFormController {
         ratingSlider.valueProperty().addListener((observable, oldValue, newValue) ->
                 ratingLabel.setText(String.format("%.1f", newValue.doubleValue())));
         ratingLabel.setText(String.format("%.1f", ratingSlider.getValue()));
+        updateCoverPreview(null);
     }
 
     public void setCallbacks(Consumer<Game> onSaved, Runnable onCancel) {
@@ -64,7 +69,9 @@ public class GameFormController {
         descriptionArea.setText(game.getDescription());
         coverPath = game.getCoverPath();
         if (coverPath != null && !coverPath.isBlank()) {
-            coverButton.setText("▧\n" + new File(coverPath).getName() + "\nClick to replace");
+            File coverFile = new File(coverPath);
+            coverButton.setText("Cover selected\n" + coverFile.getName() + "\nClick to replace");
+            updateCoverPreview(coverFile);
         }
     }
 
@@ -76,7 +83,8 @@ public class GameFormController {
         File file = chooser.showOpenDialog(coverButton.getScene().getWindow());
         if (file != null) {
             coverPath = file.getAbsolutePath();
-            coverButton.setText("▧\n" + file.getName() + "\nClick to replace");
+            coverButton.setText("Cover selected\n" + file.getName() + "\nClick to replace");
+            updateCoverPreview(file);
         }
     }
 
@@ -92,7 +100,7 @@ public class GameFormController {
             game.setGenre(blankToDefault(genreField.getText(), "Uncategorized"));
             game.setStatus(blankToDefault(statusCombo.getValue(), "Owned"));
             game.setRating(Math.round(ratingSlider.getValue() * 10.0) / 10.0);
-            game.setDescription(blankToDefault(descriptionArea.getText(), "Aucune description renseignée."));
+            game.setDescription(blankToDefault(descriptionArea.getText(), "Aucune description renseignee."));
             game.setCoverPath(coverPath == null ? "" : coverPath);
             Game saved = service.save(game);
             if (onSaved != null) {
@@ -100,7 +108,7 @@ public class GameFormController {
             }
         } catch (GameValidationException | NumberFormatException exception) {
             errorLabel.setText(exception instanceof NumberFormatException
-                    ? "L'année de sortie doit être un nombre valide."
+                    ? "L'annee de sortie doit etre un nombre valide."
                     : exception.getMessage());
         } catch (RuntimeException exception) {
             errorLabel.setText("Une erreur est survenue pendant l'enregistrement.");
@@ -112,6 +120,18 @@ public class GameFormController {
         if (onCancel != null) {
             onCancel.run();
         }
+    }
+
+    private void updateCoverPreview(File file) {
+        if (file == null || !file.exists()) {
+            coverPreview.setImage(null);
+            coverPlaceholder.setVisible(true);
+            return;
+        }
+        Image image = new Image(file.toURI().toString(), 300, 400, true, true);
+        coverPreview.setImage(image);
+        coverPlaceholder.setVisible(image.isError());
+        errorLabel.setText(image.isError() ? "Impossible d'afficher cette image." : "");
     }
 
     private int parseYear() {

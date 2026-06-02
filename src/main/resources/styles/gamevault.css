@@ -482,7 +482,7 @@
 }
 
 .cover-drop {
-    -fx-min-height: 300;
+    -fx-min-height: 96;
     -fx-background-color: #2d3449;
     -fx-border-color: #494454;
     -fx-border-width: 2;
@@ -492,6 +492,23 @@
     -fx-text-fill: #958ea0;
     -fx-font-size: 14px;
     -fx-cursor: hand;
+}
+
+.cover-preview-frame {
+    -fx-min-height: 400;
+    -fx-pref-height: 400;
+    -fx-background-color: linear-gradient(to bottom right, #171f33, #0b1326);
+    -fx-background-radius: 12;
+    -fx-border-color: #494454;
+    -fx-border-width: 1;
+    -fx-border-radius: 12;
+    -fx-padding: 12;
+}
+
+.cover-placeholder {
+    -fx-text-fill: #958ea0;
+    -fx-font-size: 14px;
+    -fx-font-weight: 700;
 }
 
 .error-label {
