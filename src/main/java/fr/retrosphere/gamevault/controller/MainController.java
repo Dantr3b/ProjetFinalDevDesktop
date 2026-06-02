@@ -16,8 +16,10 @@ import javafx.scene.control.ButtonType;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Priority;
@@ -26,8 +28,13 @@ import javafx.scene.layout.StackPane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
@@ -37,6 +44,7 @@ import java.util.stream.Collectors;
 public class MainController {
     private static final List<String> PLATFORMS = List.of("All Platforms", "PC", "PS5", "Xbox", "Switch", "Retro");
 
+    @FXML private BorderPane root;
     @FXML private StackPane contentPane;
     @FXML private TextField searchField;
     @FXML private ComboBox<String> sortCombo;
@@ -45,9 +53,13 @@ public class MainController {
     @FXML private Button statsButton;
     @FXML private Button settingsButton;
     @FXML private Button profileButton;
+    @FXML private Button addGameButton;
+    @FXML private Label sortByLabel;
 
     private final GameService service = new GameService();
     private String selectedPlatform = "All Platforms";
+    private boolean highDensityGrid;
+    private boolean french;
 
     @FXML
     private void initialize() {
@@ -55,6 +67,7 @@ public class MainController {
         sortCombo.setValue("Newest Added");
         searchField.textProperty().addListener((observable, oldValue, newValue) -> showCollection());
         sortCombo.valueProperty().addListener((observable, oldValue, newValue) -> showCollection());
+        applyLanguage();
         showCollection();
     }
 
@@ -66,18 +79,21 @@ public class MainController {
         page.getChildren().add(filterBar());
 
         GridPane grid = new GridPane();
-        grid.setHgap(22);
-        grid.setVgap(22);
+        grid.setHgap(highDensityGrid ? 14 : 22);
+        grid.setVgap(highDensityGrid ? 14 : 22);
+        int columns = highDensityGrid ? 5 : 4;
         for (int i = 0; i < games.size(); i++) {
-            Game game = games.get(i);
-            grid.add(gameCard(game), i % 4, i / 4);
+            grid.add(gameCard(games.get(i)), i % columns, i / columns);
         }
+
         page.getChildren().add(grid);
-        Label footer = new Label("Showing " + games.size() + " of " + service.allGames().size() + " titles in your archival vault.");
+        Label footer = new Label(french
+                ? "Affichage de " + games.size() + " jeu(x) sur " + service.allGames().size() + " dans le coffre."
+                : "Showing " + games.size() + " of " + service.allGames().size() + " titles in your archival vault.");
         footer.getStyleClass().add("muted-center");
         page.getChildren().add(footer);
         setContent(page);
-        statusLabel.setText(games.size() + " jeu(x) affiché(s)");
+        statusLabel.setText(games.size() + (french ? " jeu(x) affiche(s)" : " game(s) shown"));
     }
 
     @FXML
@@ -90,12 +106,14 @@ public class MainController {
         activate(statsButton);
         List<Game> games = service.allGames();
         VBox page = pageShell();
-        page.getChildren().add(titleBlock("Collection Statistics", "An overview of your digital archive performance and library growth."));
+        page.getChildren().add(titleBlock(t("Collection Statistics", "Statistiques de collection"),
+                t("An overview of your digital archive performance and library growth.", "Vue d'ensemble de votre archive et de sa croissance.")));
 
-        HBox cards = new HBox(18, metric("Total Games", String.valueOf(games.size()), "+ ready"),
-                metric("Platforms Tracked", String.valueOf(distinctPlatforms(games)), "systems"),
-                metric("Average Rating", String.format("%.2f", averageRating(games)), "vault score"),
-                metric("Last Added", games.isEmpty() ? "-" : games.get(0).getTitle(), "newest"));
+        HBox cards = new HBox(18,
+                metric(t("Total Games", "Total de jeux"), String.valueOf(games.size()), "+ ready"),
+                metric(t("Platforms Tracked", "Plateformes suivies"), String.valueOf(distinctPlatforms(games)), t("systems", "systemes")),
+                metric(t("Average Rating", "Note moyenne"), String.format("%.2f", averageRating(games)), t("vault score", "score du coffre")),
+                metric(t("Last Added", "Dernier ajout"), games.isEmpty() ? "-" : games.get(0).getTitle(), t("newest", "recent")));
         cards.getStyleClass().add("metrics-row");
         page.getChildren().add(cards);
 
@@ -103,25 +121,89 @@ public class MainController {
         page.getChildren().add(charts);
         page.getChildren().add(topRatedTable(games));
         setContent(page);
-        statusLabel.setText("Statistiques calculées");
+        statusLabel.setText(t("Statistics computed", "Statistiques calculees"));
     }
 
     @FXML
     private void showSettings() {
         activate(settingsButton);
         VBox page = pageShell();
-        page.getChildren().add(titleBlock("Settings", "Manage your vault environment and archival preferences."));
-        page.getChildren().add(settingsPanel("General",
-                List.of(row("Interface Language", "Français / English", "English (US)"),
-                        row("Auto-save Frequency", "Determine how often archival edits are saved.", "Every 15 minutes"))));
-        page.getChildren().add(settingsPanel("Appearance",
-                List.of(row("Dark Mode", "High-contrast dark foundations for reduced eye strain.", "Enabled"),
-                        row("High Density Grid", "Show more games on screen by reducing card padding.", "Disabled"))));
-        page.getChildren().add(settingsPanel("Database & Backup",
-                List.of(row("Database Path", "Configured in application.properties.", AppConfig.get("database.url", "data/gamevault.db")),
-                        row("Figma Mockup", "Reference used for this interface.", "Linked in README"))));
+        page.getChildren().add(titleBlock(t("Settings", "Parametres"),
+                t("Manage your vault environment and archival preferences.", "Gerez l'environnement du coffre et vos preferences d'archivage.")));
+
+        ComboBox<String> languageCombo = new ComboBox<>();
+        languageCombo.getItems().setAll("English (US)", "Francais");
+        languageCombo.setValue(french ? "Francais" : "English (US)");
+        languageCombo.getStyleClass().add("setting-control");
+        languageCombo.setButtonCell(new javafx.scene.control.ListCell<>() {
+            @Override
+            protected void updateItem(String item, boolean empty) {
+                super.updateItem(item, empty);
+                setText(empty ? "" : item);
+                setStyle("-fx-text-fill: #dae2fd;");
+            }
+        });
+        languageCombo.setOnAction(event -> {
+            french = "Francais".equals(languageCombo.getValue());
+            applyLanguage();
+            showSettings();
+        });
+
+        ToggleButton darkModeToggle = new ToggleButton(root.getStyleClass().contains("light-mode") ? "Disabled" : "Enabled");
+        darkModeToggle.setSelected(!root.getStyleClass().contains("light-mode"));
+        darkModeToggle.getStyleClass().add("settings-toggle");
+        darkModeToggle.setOnAction(event -> {
+            boolean enabled = darkModeToggle.isSelected();
+            darkModeToggle.setText(enabled ? "Enabled" : "Disabled");
+            root.getStyleClass().remove("light-mode");
+            if (!enabled) {
+                root.getStyleClass().add("light-mode");
+            }
+            statusLabel.setText(enabled ? "Mode sombre active" : "Mode clair active");
+        });
+
+        ToggleButton densityToggle = new ToggleButton(highDensityGrid ? "Enabled" : "Disabled");
+        densityToggle.setSelected(highDensityGrid);
+        densityToggle.getStyleClass().add("settings-toggle");
+        densityToggle.setOnAction(event -> {
+            highDensityGrid = densityToggle.isSelected();
+            densityToggle.setText(highDensityGrid ? "Enabled" : "Disabled");
+            statusLabel.setText(highDensityGrid ? "Grille dense activee" : "Grille dense desactivee");
+        });
+
+        Button browseButton = settingsButton(t("Open Folder", "Ouvrir dossier"));
+        browseButton.setOnAction(event -> openDatabaseFolder());
+
+        Button backupButton = settingsButton(t("Backup Library", "Sauvegarder"));
+        backupButton.getStyleClass().add("outline-button");
+        backupButton.setOnAction(event -> backupDatabase("backup"));
+
+        Button restoreButton = settingsButton(t("Create Restore Point", "Point de restauration"));
+        restoreButton.setOnAction(event -> backupDatabase("restore-point"));
+
+        Button figmaButton = settingsButton(t("Show Figma Links", "Afficher Figma"));
+        figmaButton.setOnAction(event -> showInfo("Maquette Figma",
+                "Les liens Figma sont listes dans le README et dans application.properties."));
+
+        page.getChildren().add(settingsPanel(t("General", "General"),
+                List.of(rowWithControl(t("Interface Language", "Langue de l'interface"),
+                        t("Select the UI language used by GameVault.", "Selectionne la langue utilisee par GameVault."), languageCombo))));
+        page.getChildren().add(settingsPanel(t("Appearance", "Apparence"),
+                List.of(rowWithControl(t("Dark Mode", "Mode sombre"),
+                                t("Use high-contrast dark foundations for reduced eye strain.", "Utilise un fond sombre contraste pour limiter la fatigue visuelle."), darkModeToggle),
+                        rowWithControl(t("High Density Grid", "Grille dense"),
+                                t("Show more games on screen by reducing card width.", "Affiche plus de jeux en reduisant la largeur des cartes."), densityToggle))));
+        page.getChildren().add(settingsPanel(t("Database & Backup", "Base de donnees et sauvegarde"),
+                List.of(rowWithControl(t("Database Path", "Chemin de la base"), AppConfig.get("database.url", "data/gamevault.db"), browseButton),
+                        rowWithControl(t("Backup Library", "Sauvegarde de la bibliotheque"),
+                                t("Copy the SQLite database into data/backups.", "Copie la base SQLite dans data/backups."), backupButton),
+                        rowWithControl(t("Restore Point", "Point de restauration"),
+                                t("Create a timestamped local restore point.", "Cree une copie locale horodatee."), restoreButton),
+                        rowWithControl(t("Figma Mockup", "Maquette Figma"),
+                                t("Reference used for this interface.", "Reference utilisee pour cette interface."), figmaButton))));
+
         setContent(page);
-        statusLabel.setText("Paramètres");
+        statusLabel.setText(t("Settings", "Parametres"));
     }
 
     @FXML
@@ -158,7 +240,7 @@ public class MainController {
             GameFormController controller = loader.getController();
             controller.setCallbacks(saved -> {
                 showCollection();
-                statusLabel.setText("Jeu enregistré : " + saved.getTitle());
+                statusLabel.setText("Jeu enregistre : " + saved.getTitle());
             }, this::showCollection);
             if (game != null) {
                 controller.edit(game);
@@ -186,17 +268,20 @@ public class MainController {
     }
 
     private Node gameCard(Game game) {
+        double cardWidth = highDensityGrid ? 170 : 210;
+        double coverHeight = highDensityGrid ? 170 : 210;
+
         VBox card = new VBox();
         card.getStyleClass().add("game-card");
-        card.setPrefWidth(210);
+        card.setPrefWidth(cardWidth);
         card.setOnMouseClicked(event -> showDetails(game));
 
-        StackPane cover = cover(game, 210, 210);
+        StackPane cover = cover(game, cardWidth, coverHeight);
         Label platform = new Label(game.getPlatform().toUpperCase());
         platform.getStyleClass().add("platform-badge");
         StackPane.setAlignment(platform, Pos.TOP_LEFT);
         StackPane.setMargin(platform, new Insets(10));
-        Label rating = new Label("★ " + String.format("%.1f", game.getRating()));
+        Label rating = new Label("STAR " + String.format("%.1f", game.getRating()));
         rating.getStyleClass().add("rating-corner");
         StackPane.setAlignment(rating, Pos.BOTTOM_RIGHT);
         StackPane.setMargin(rating, new Insets(10));
@@ -205,7 +290,7 @@ public class MainController {
         VBox meta = new VBox(6);
         meta.getStyleClass().add("game-meta");
         meta.getChildren().addAll(styledLabel(game.getTitle(), "game-title"),
-                styledLabel(game.getGenre().toUpperCase() + "  •  " + game.getStatus().toUpperCase(), "game-subtitle"));
+                styledLabel(game.getGenre().toUpperCase() + "  -  " + game.getStatus().toUpperCase(), "game-subtitle"));
         card.getChildren().addAll(cover, meta);
         return card;
     }
@@ -218,7 +303,7 @@ public class MainController {
         StackPane cover = cover(game, 340, 420);
         VBox info = new VBox(18);
         info.getChildren().addAll(
-                styledLabel(game.getGenre() + " • " + game.getPlatform(), "cyan-label"),
+                styledLabel(game.getGenre() + " - " + game.getPlatform(), "cyan-label"),
                 styledLabel(game.getTitle().toUpperCase(), "detail-title"),
                 detailsGrid(game),
                 ratingBlock(game),
@@ -236,7 +321,7 @@ public class MainController {
         hero.getChildren().addAll(cover, info);
         page.getChildren().add(hero);
         setContent(page);
-        statusLabel.setText("Détail : " + game.getTitle());
+        statusLabel.setText("Detail : " + game.getTitle());
     }
 
     private GridPane detailsGrid(Game game) {
@@ -265,13 +350,13 @@ public class MainController {
 
     private void confirmDelete(Game game) {
         Alert alert = new Alert(Alert.AlertType.CONFIRMATION,
-                "Supprimer définitivement \"" + game.getTitle() + "\" de la collection ?",
+                "Supprimer definitivement \"" + game.getTitle() + "\" de la collection ?",
                 ButtonType.CANCEL, ButtonType.OK);
         alert.setHeaderText("Confirmation de suppression");
         alert.showAndWait().filter(ButtonType.OK::equals).ifPresent(button -> {
             service.delete(game);
             showCollection();
-            statusLabel.setText("Jeu supprimé : " + game.getTitle());
+            statusLabel.setText("Jeu supprime : " + game.getTitle());
         });
     }
 
@@ -302,6 +387,38 @@ public class MainController {
 
     private void setContent(Node node) {
         contentPane.getChildren().setAll(node);
+    }
+
+    private void applyLanguage() {
+        collectionButton.setText(french ? "▣  Ma collection" : "▣  My Collection");
+        statsButton.setText(french ? "⌁  Statistiques" : "⌁  Statistics");
+        settingsButton.setText(french ? "⚙  Parametres" : "⚙  Settings");
+        profileButton.setText(french ? "AM  Alex Mercer\n     Conservateur Pro" : "AM  Alex Mercer\n     Pro Curator");
+        addGameButton.setText(french ? "+ AJOUTER UN JEU" : "+ ADD GAME");
+        searchField.setPromptText(french ? "Rechercher dans la collection..." : "Search your archive...");
+        sortByLabel.setText(french ? "Trier par :" : "Sort by:");
+
+        String selectedSort = sortCombo.getValue();
+        sortCombo.getItems().setAll(
+                t("Newest Added", "Ajout recent"),
+                t("Title", "Titre"),
+                t("Rating", "Note"),
+                t("Release Year", "Annee de sortie"));
+        if (selectedSort == null) {
+            sortCombo.setValue(sortCombo.getItems().get(0));
+        } else if (selectedSort.equals("Title") || selectedSort.equals("Titre")) {
+            sortCombo.setValue(t("Title", "Titre"));
+        } else if (selectedSort.equals("Rating") || selectedSort.equals("Note")) {
+            sortCombo.setValue(t("Rating", "Note"));
+        } else if (selectedSort.equals("Release Year") || selectedSort.equals("Annee de sortie")) {
+            sortCombo.setValue(t("Release Year", "Annee de sortie"));
+        } else {
+            sortCombo.setValue(t("Newest Added", "Ajout recent"));
+        }
+    }
+
+    private String t(String english, String frenchText) {
+        return french ? frenchText : english;
     }
 
     private VBox titleBlock(String title, String subtitle) {
@@ -357,8 +474,8 @@ public class MainController {
                 .forEach(game -> panel.getChildren().add(new HBox(20,
                         styledLabel(game.getTitle(), "detail-value"),
                         styledLabel(game.getPlatform(), "platform-text"),
-                        styledLabel(game.getReleaseYear() + "", "muted"),
-                        styledLabel(String.format("%.1f ★", game.getRating()), "gold-label"))));
+                        styledLabel(String.valueOf(game.getReleaseYear()), "muted"),
+                        styledLabel(String.format("%.1f STAR", game.getRating()), "gold-label"))));
         return panel;
     }
 
@@ -377,22 +494,60 @@ public class MainController {
         return panel;
     }
 
-    private HBox row(String title, String subtitle, String value) {
+    private HBox rowWithControl(String title, String subtitle, Node control) {
         VBox copy = new VBox(2, styledLabel(title, "detail-value"), styledLabel(subtitle, "muted"));
-        Label valueLabel = styledLabel(value, "setting-value");
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-        HBox row = new HBox(16, copy, spacer, valueLabel);
+        HBox row = new HBox(16, copy, spacer, control);
         row.setAlignment(Pos.CENTER_LEFT);
         return row;
+    }
+
+    private Button settingsButton(String text) {
+        Button button = new Button(text);
+        button.getStyleClass().add("setting-action-button");
+        return button;
+    }
+
+    private void openDatabaseFolder() {
+        Path folder = Path.of("data").toAbsolutePath().normalize();
+        try {
+            Files.createDirectories(folder);
+            if (Desktop.isDesktopSupported()) {
+                Desktop.getDesktop().open(folder.toFile());
+                statusLabel.setText("Dossier data ouvert");
+            } else {
+                showInfo("Dossier de base de donnees", folder.toString());
+            }
+        } catch (IOException exception) {
+            showError("Impossible d'ouvrir ou de creer le dossier data.");
+        }
+    }
+
+    private void backupDatabase(String prefix) {
+        Path database = Path.of("data", "gamevault.db");
+        if (!Files.exists(database)) {
+            showError("La base de donnees n'existe pas encore. Lance l'application une premiere fois avant la sauvegarde.");
+            return;
+        }
+        try {
+            Files.createDirectories(Path.of("data", "backups"));
+            String timestamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss").format(LocalDateTime.now());
+            Path target = Path.of("data", "backups", "gamevault-" + prefix + "-" + timestamp + ".db");
+            Files.copy(database, target, StandardCopyOption.REPLACE_EXISTING);
+            showInfo("Sauvegarde creee", target.toAbsolutePath().normalize().toString());
+            statusLabel.setText("Sauvegarde creee : " + target.getFileName());
+        } catch (IOException exception) {
+            showError("Impossible de creer la sauvegarde de la base.");
+        }
     }
 
     private Node profileActions(List<Game> games) {
         HBox area = new HBox(24);
         VBox actions = new VBox(16, styledLabel("Quick Actions", "section-title"),
-                styledLabel("Edit Profile    ›", "detail-value"),
+                styledLabel("Edit Profile    >", "detail-value"),
                 styledLabel("Export Collection    CSV / PDF", "detail-value"),
-                styledLabel("Account Privacy    ›", "detail-value"));
+                styledLabel("Account Privacy    >", "detail-value"));
         actions.getStyleClass().add("panel");
         VBox recent = new VBox(16, styledLabel("Recently Archived", "section-title"));
         recent.getStyleClass().add("wide-panel");
@@ -410,7 +565,8 @@ public class MainController {
     }
 
     private void activate(Button active) {
-        List.of(collectionButton, statsButton, settingsButton, profileButton).forEach(button -> button.getStyleClass().remove("nav-button-active"));
+        List.of(collectionButton, statsButton, settingsButton, profileButton)
+                .forEach(button -> button.getStyleClass().remove("nav-button-active"));
         if (active != null && !active.getStyleClass().contains("nav-button-active")) {
             active.getStyleClass().add("nav-button-active");
         }
@@ -419,6 +575,12 @@ public class MainController {
     private void showError(String message) {
         Alert alert = new Alert(Alert.AlertType.ERROR, message, ButtonType.OK);
         alert.setHeaderText("Erreur GameVault");
+        alert.showAndWait();
+    }
+
+    private void showInfo(String title, String message) {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION, message, ButtonType.OK);
+        alert.setHeaderText(title);
         alert.showAndWait();
     }
 }

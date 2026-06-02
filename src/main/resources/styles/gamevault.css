@@ -316,6 +316,101 @@
     -fx-padding: 10 18;
 }
 
+.setting-control,
+.setting-action-button,
+.settings-toggle {
+    -fx-background-color: #2d3449;
+    -fx-background-radius: 8;
+    -fx-border-color: #494454;
+    -fx-border-radius: 8;
+    -fx-text-fill: #dae2fd;
+    -fx-font-weight: 700;
+    -fx-padding: 10 18;
+    -fx-cursor: hand;
+    -fx-min-width: 150;
+}
+
+.setting-control .list-cell,
+.choice .list-cell {
+    -fx-background-color: #2d3449;
+    -fx-text-fill: #dae2fd;
+}
+
+.setting-control .arrow-button,
+.choice .arrow-button {
+    -fx-background-color: transparent;
+}
+
+.combo-box-popup .list-view {
+    -fx-background-color: #2d3449;
+    -fx-border-color: #494454;
+}
+
+.combo-box-popup .list-cell {
+    -fx-background-color: #2d3449;
+    -fx-text-fill: #dae2fd;
+    -fx-padding: 8 12;
+}
+
+.combo-box-popup .list-cell:hover,
+.combo-box-popup .list-cell:selected {
+    -fx-background-color: #a078ff;
+    -fx-text-fill: #340080;
+}
+
+.settings-toggle:selected {
+    -fx-background-color: #a078ff;
+    -fx-text-fill: #340080;
+}
+
+.setting-action-button:hover,
+.settings-toggle:hover {
+    -fx-border-color: #d0bcff;
+}
+
+.light-mode,
+.light-mode .content-pane,
+.light-mode .page,
+.light-mode .form-screen,
+.light-mode .content-scroll,
+.light-mode .content-scroll .viewport {
+    -fx-background-color: #f4f7fb;
+}
+
+.light-mode .sidebar,
+.light-mode .topbar,
+.light-mode .statusbar {
+    -fx-background-color: #e9eef7;
+}
+
+.light-mode .panel,
+.light-mode .metric-card,
+.light-mode .wide-panel,
+.light-mode .side-panel,
+.light-mode .detail-hero,
+.light-mode .profile-hero,
+.light-mode .game-card,
+.light-mode .tip-panel {
+    -fx-background-color: #ffffff;
+    -fx-border-color: #cbd5e1;
+}
+
+.light-mode .page-title,
+.light-mode .page-title-small,
+.light-mode .section-title,
+.light-mode .detail-title,
+.light-mode .detail-value,
+.light-mode .game-title,
+.light-mode .metric-value {
+    -fx-text-fill: #172033;
+}
+
+.light-mode .muted,
+.light-mode .description,
+.light-mode .game-subtitle {
+    -fx-text-fill: #475569;
+}
+
 .rating-block {
     -fx-padding: 12;
     -fx-background-color: rgba(208, 188, 255, 0.08);

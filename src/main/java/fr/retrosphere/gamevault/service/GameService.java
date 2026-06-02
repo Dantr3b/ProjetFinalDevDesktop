@@ -74,13 +74,13 @@ public class GameService {
     }
 
     private Comparator<Game> sortComparator(String sort) {
-        if ("Title".equals(sort)) {
+        if ("Title".equals(sort) || "Titre".equals(sort)) {
             return Comparator.comparing(Game::getTitle, String.CASE_INSENSITIVE_ORDER);
         }
-        if ("Rating".equals(sort)) {
+        if ("Rating".equals(sort) || "Note".equals(sort)) {
             return Comparator.comparingDouble(Game::getRating).reversed();
         }
-        if ("Release Year".equals(sort)) {
+        if ("Release Year".equals(sort) || "Annee de sortie".equals(sort)) {
             return Comparator.comparingInt(Game::getReleaseYear).reversed();
         }
         return Comparator.comparing(Game::getAddedAt, Comparator.nullsLast(Comparator.reverseOrder()));

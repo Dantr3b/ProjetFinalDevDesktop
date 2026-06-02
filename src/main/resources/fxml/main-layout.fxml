@@ -36,8 +36,8 @@
     <top>
         <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="topbar">
             <TextField fx:id="searchField" promptText="Search your archive..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
-            <Button onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
-            <Label text="♡" styleClass="top-icon"/>
+            <Button fx:id="addGameButton" onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
+            <Label text="◌" styleClass="top-icon"/>
             <Label text="◎" styleClass="top-icon"/>
         </HBox>
     </top>
@@ -50,7 +50,7 @@
         <HBox alignment="CENTER_RIGHT" spacing="12.0" styleClass="statusbar">
             <Label fx:id="statusLabel" text="Ready" styleClass="muted"/>
             <Region HBox.hgrow="ALWAYS"/>
-            <Label text="Sort by:" styleClass="muted"/>
+            <Label fx:id="sortByLabel" text="Sort by:" styleClass="muted"/>
             <ComboBox fx:id="sortCombo" prefWidth="160.0" styleClass="choice"/>
         </HBox>
     </bottom>
