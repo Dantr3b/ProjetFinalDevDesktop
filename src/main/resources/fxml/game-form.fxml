@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.Slider?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.GridPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.VBox?>
+
+<HBox spacing="32.0" styleClass="form-screen"
+      xmlns="http://javafx.com/javafx/23.0.1"
+      xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="fr.retrosphere.gamevault.controller.GameFormController">
+    <VBox spacing="24.0" HBox.hgrow="ALWAYS" styleClass="panel">
+        <Label text="COLLECTION › NEW ARCHIVE ENTRY" styleClass="eyebrow"/>
+        <VBox spacing="4.0">
+            <Label fx:id="formTitleLabel" text="Vault Submission" styleClass="page-title-small"/>
+            <Label text="Enter the definitive metadata for the gaming masterpiece you wish to archive." styleClass="muted"/>
+        </VBox>
+        <GridPane hgap="18.0" vgap="14.0">
+            <Label text="GAME TITLE" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="0"/>
+            <TextField fx:id="titleField" promptText="e.g. Elden Ring: Shadow of the Erdtree" GridPane.columnIndex="0" GridPane.rowIndex="1" GridPane.columnSpan="2"/>
+            <Label text="DEVELOPER" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="2"/>
+            <Label text="PUBLISHER" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="2"/>
+            <TextField fx:id="developerField" promptText="FromSoftware" GridPane.columnIndex="0" GridPane.rowIndex="3"/>
+            <TextField fx:id="publisherField" promptText="Bandai Namco" GridPane.columnIndex="1" GridPane.rowIndex="3"/>
+            <Label text="RELEASE YEAR" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="4"/>
+            <Label text="PLATFORM" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="4"/>
+            <TextField fx:id="yearField" promptText="2024" GridPane.columnIndex="0" GridPane.rowIndex="5"/>
+            <ComboBox fx:id="platformCombo" promptText="Select hardware..." GridPane.columnIndex="1" GridPane.rowIndex="5"/>
+            <Label text="GENRE" styleClass="field-label" GridPane.columnIndex="0" GridPane.rowIndex="6"/>
+            <Label text="STATUS" styleClass="field-label" GridPane.columnIndex="1" GridPane.rowIndex="6"/>
+            <TextField fx:id="genreField" promptText="Action RPG" GridPane.columnIndex="0" GridPane.rowIndex="7"/>
+            <ComboBox fx:id="statusCombo" promptText="Owned" GridPane.columnIndex="1" GridPane.rowIndex="7"/>
+        </GridPane>
+        <VBox spacing="8.0">
+            <Label text="ARCHIVAL RATING" styleClass="field-label"/>
+            <HBox alignment="CENTER_LEFT" spacing="14.0">
+                <Slider fx:id="ratingSlider" min="0.0" max="10.0" value="8.0" majorTickUnit="1.0" showTickLabels="true" showTickMarks="true" HBox.hgrow="ALWAYS"/>
+                <Label fx:id="ratingLabel" text="8.0" styleClass="rating-badge"/>
+            </HBox>
+        </VBox>
+        <VBox spacing="8.0">
+            <Label text="CURATOR NOTES / DESCRIPTION" styleClass="field-label"/>
+            <TextArea fx:id="descriptionArea" prefRowCount="5" promptText="Document the impact and mechanics of the entry..."/>
+        </VBox>
+        <Label fx:id="errorLabel" styleClass="error-label"/>
+        <HBox alignment="CENTER_RIGHT" spacing="18.0">
+            <Region HBox.hgrow="ALWAYS"/>
+            <Button text="Cancel" onAction="#cancel" styleClass="ghost-button"/>
+            <Button text="Save to Vault" onAction="#save" styleClass="primary-button"/>
+        </HBox>
+    </VBox>
+    <VBox spacing="20.0" prefWidth="320.0">
+        <VBox spacing="8.0">
+            <Label text="BOX ART ARCHIVE" styleClass="field-label"/>
+            <Button fx:id="coverButton" onAction="#chooseCover" text="▧&#10;Choose Cover Art&#10;JPG, PNG, GIF" maxWidth="Infinity" styleClass="cover-drop"/>
+        </VBox>
+        <VBox spacing="8.0" styleClass="tip-panel">
+            <Label text="CURATOR TIP" styleClass="cyan-label"/>
+            <Label wrapText="true" text="High-resolution box art keeps the library clear and pleasant to browse. A vertical 3:4 image is recommended." styleClass="muted"/>
+        </VBox>
+    </VBox>
+    <padding>
+        <Insets bottom="40.0" left="40.0" right="40.0" top="40.0"/>
+    </padding>
+</HBox>

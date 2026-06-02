@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ComboBox?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.Region?>
+<?import javafx.scene.layout.StackPane?>
+<?import javafx.scene.layout.VBox?>
+
+<BorderPane fx:id="root" prefHeight="820.0" prefWidth="1280.0"
+            styleClass="app-root"
+            xmlns="http://javafx.com/javafx/23.0.1"
+            xmlns:fx="http://javafx.com/fxml/1"
+            fx:controller="fr.retrosphere.gamevault.controller.MainController">
+    <left>
+        <VBox prefWidth="280.0" styleClass="sidebar">
+            <padding>
+                <Insets bottom="28.0" left="0.0" right="0.0" top="34.0"/>
+            </padding>
+            <VBox spacing="2.0" styleClass="brand">
+                <Label text="GameVault" styleClass="brand-title"/>
+                <Label text="ARCHIVAL TOOL" styleClass="brand-subtitle"/>
+            </VBox>
+            <VBox VBox.vgrow="ALWAYS" spacing="6.0" styleClass="nav">
+                <Button fx:id="collectionButton" maxWidth="Infinity" onAction="#showCollection" text="▣  My Collection" styleClass="nav-button"/>
+                <Button fx:id="statsButton" maxWidth="Infinity" onAction="#showStatistics" text="⌁  Statistics" styleClass="nav-button"/>
+                <Button fx:id="settingsButton" maxWidth="Infinity" onAction="#showSettings" text="⚙  Settings" styleClass="nav-button"/>
+            </VBox>
+            <Button fx:id="profileButton" onAction="#showProfile" maxWidth="Infinity" styleClass="profile-card" text="AM  Alex Mercer&#10;     Pro Curator"/>
+        </VBox>
+    </left>
+    <top>
+        <HBox alignment="CENTER_LEFT" spacing="20.0" styleClass="topbar">
+            <TextField fx:id="searchField" promptText="Search your archive..." HBox.hgrow="ALWAYS" styleClass="search-field"/>
+            <Button onAction="#showAddForm" text="+ ADD GAME" styleClass="primary-pill"/>
+            <Label text="♡" styleClass="top-icon"/>
+            <Label text="◎" styleClass="top-icon"/>
+        </HBox>
+    </top>
+    <center>
+        <ScrollPane fitToWidth="true" hbarPolicy="NEVER" styleClass="content-scroll">
+            <StackPane fx:id="contentPane" styleClass="content-pane"/>
+        </ScrollPane>
+    </center>
+    <bottom>
+        <HBox alignment="CENTER_RIGHT" spacing="12.0" styleClass="statusbar">
+            <Label fx:id="statusLabel" text="Ready" styleClass="muted"/>
+            <Region HBox.hgrow="ALWAYS"/>
+            <Label text="Sort by:" styleClass="muted"/>
+            <ComboBox fx:id="sortCombo" prefWidth="160.0" styleClass="choice"/>
+        </HBox>
+    </bottom>
+</BorderPane>
