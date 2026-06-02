@@ -31,4 +31,3 @@
 - Export PDF.
 - Import automatique depuis une API de jeux vidéo.
 - Packaging JAR prêt à lancer.
-- Docker Compose pour environnement reproductible.
